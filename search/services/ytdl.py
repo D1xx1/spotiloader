@@ -1,5 +1,7 @@
 from typing import Tuple
 import re
+import os
+from tempfile import TemporaryDirectory
 from yt_dlp import YoutubeDL
 
 _SAFE = re.compile(r'[^\w\- .\[\]\(\)]', re.UNICODE)
@@ -63,3 +65,35 @@ def get_direct_audio(video_id: str) -> Tuple[str, str, str]:
 
         filename = f"{_sanitize_filename(title)} [{video_id}].{ext}"
         return stream_url, filename, mime
+
+
+def download_mp3(video_id: str) -> Tuple[bytes, str]:
+    """
+    Download audio from YouTube and convert it to MP3 using yt-dlp.
+    Returns (data_bytes, filename).
+    """
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    with TemporaryDirectory() as tmpdir:
+        outtmpl = os.path.join(tmpdir, "%(id)s.%(ext)s")
+        ydl_opts = {
+            "quiet": True,
+            "noplaylist": True,
+            "format": "bestaudio/best",
+            "outtmpl": outtmpl,
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
+                }
+            ],
+        }
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            temp_path = ydl.prepare_filename(info)
+        mp3_path = os.path.splitext(temp_path)[0] + ".mp3"
+        with open(mp3_path, "rb") as f:
+            data = f.read()
+    title = info.get("title") or "audio"
+    filename = f"{_sanitize_filename(title)} [{video_id}].mp3"
+    return data, filename

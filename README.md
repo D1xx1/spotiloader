@@ -12,6 +12,8 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+Для конвертации аудио в mp3 требуется установленный `ffmpeg`.
+
 Добавьте ключи в `djspyt/keys.py`:
 ```python
 SPOTIFY_CLIENT_ID = "ваш_id"
@@ -30,3 +32,8 @@ python manage.py runserver 8080
 - URL: `https://open.spotify.com/track/6habFhsOp2NvshLv26DqMb?si=...`
 - URI: `spotify:track:6habFhsOp2NvshLv26DqMb`
 - Сам ID (22 символа): `6habFhsOp2NvshLv26DqMb`
+
+## Загрузка аудио с YouTube
+
+На странице трека в блоке результатов YouTube для каждого видео есть кнопка «Скачать аудио». 
+Файл конвертируется в MP3 с помощью `yt-dlp` и `ffmpeg` и предлагается для загрузки.
