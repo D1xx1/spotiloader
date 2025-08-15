@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid cols-2">
+    <div class="card">
+        <div class="row">
+            <img class="thumb" style="width:96px;height:96px;" src="{{ meta.image }}" alt="">
+            <div>
+                <h2 style="margin:0 0 6px 0;">{{ meta.name }}</h2>
+                <div class="muted">{{ meta.artists }}</div>
+                <div class="muted">Альбом: {{ meta.album }}{% if meta.release_date %} · {{ meta.release_date }}{% endif %}</div>
+                <div class="muted">Длительность: {{ meta.duration_str }}{% if meta.popularity %} · Популярность: {{ meta.popularity }}{% endif %}</div>
+                {% if meta.explicit %}<div class="pill" title="Explicit">Explicit</div>{% endif %}
+            </div>
+        </div>
+        <div style="margin-top:12px;">
+            <a class="pill" href="{{ meta.external_url }}" target="_blank" rel="noopener">Открыть в Spotify</a>
+            {% if meta.preview_url %}
+                <audio style="display:block;margin-top:10px;width:100%" controls src="{{ meta.preview_url }}"></audio>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card">
+        <h3 style="margin-top:0;">YouTube результаты</h3>
+        <div class="muted" style="margin-bottom:10px;">Запрос: <strong>{{ yt_query }}</strong></div>
+        {% if yt_results %}
+            <div class="grid cols-2">
+                {% for v in yt_results %}
+                    <div>
+                        <a href="{{ v.url }}" target="_blank" rel="noopener">
+                            <img class="yt-thumb" src="{{ v.thumbnail }}" alt="">
+                        </a>
+                        <div style="margin-top:6px;"><a href="{{ v.url }}" target="_blank" rel="noopener">{{ v.title }}</a></div>
+                        <div class="muted">{{ v.channel }}</div>
+                        <div class="muted" style="font-size:12px;">{{ v.published_at|slice:":10" }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="muted">Ничего не найдено на YouTube или доступ ограничен.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

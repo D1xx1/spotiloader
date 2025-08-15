@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <form method="get" action=".">
+        <div class="row" style="gap:10px;">
+            {{ form.q }}
+            <button class="btn" type="submit">Искать</button>
+        </div>
+    </form>
+    {% if error %}
+        <div class="error" style="margin-top:12px;">Ошибка запроса: {{ error }}</div>
+    {% endif %}
+    {% if query %}
+        <p class="muted" style="margin-top:12px;">Результаты поиска для: <strong>{{ query }}</strong></p>
+    {% endif %}
+</div>
+
+{% if results %}
+<div class="card" style="margin-top:14px;">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Обложка</th>
+                <th>Трек</th>
+                <th>Артист(ы)</th>
+                <th>Альбом</th>
+                <th>Длительность</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for t in results %}
+            <tr>
+                <td><img class="thumb" src="{{ t.image }}" alt=""></td>
+                <td><a href="{{ t.external_url }}" target="_blank" rel="noopener">{{ t.name }}</a></td>
+                <td>{{ t.artists }}</td>
+                <td>{{ t.album }}</td>
+                <td>{{ t.duration_str }}</td>
+                <td><a class="pill" href="{% url 'track_detail' t.id %}">Метаданные &rarr; YouTube</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% elif query %}
+    <p class="muted" style="margin-top:12px;">Ничего не найдено.</p>
+{% endif %}
+{% endblock %}

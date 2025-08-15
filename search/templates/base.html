@@ -1,0 +1,48 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spotify → YouTube</title>
+    <link rel="icon" href="data:,">
+    <style>
+        :root { --bg:#0b1020; --card:#121831; --ink:#eef2ff; --muted:#a7b0cc; --accent:#7aa2f7; --accent2:#9ece6a; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; background: var(--bg); color: var(--ink); }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        header { padding: 20px; display:flex; gap:16px; align-items:center; max-width: 1100px; margin: 0 auto; }
+        .brand { font-weight: 700; font-size: 18px; letter-spacing: .3px; }
+        main { max-width: 1100px; margin: 0 auto; padding: 0 20px 40px; }
+        .card { background: var(--card); border: 1px solid #223; border-radius: 16px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+        .grid { display:grid; gap:14px; }
+        .grid.cols-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        .grid.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+        @media (max-width: 860px) { .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; } }
+        .input { width:100%; padding:12px 14px; border-radius: 12px; border: 1px solid #2a3355; background:#0e1530; color:var(--ink); }
+        .btn { padding: 10px 14px; background: var(--accent); color:#0a0f20; font-weight:600; border:none; border-radius: 12px; cursor:pointer; }
+        .btn:hover { filter: brightness(1.1); }
+        .muted { color: var(--muted); }
+        .row { display:flex; align-items:center; gap:12px; flex-wrap: wrap; }
+        .table { width:100%; border-collapse: collapse; }
+        .table th, .table td { padding:10px; border-bottom: 1px solid #273052; text-align:left; vertical-align: middle;}
+        .thumb { width: 56px; height:56px; border-radius: 8px; object-fit: cover; background:#1c254b; }
+        .yt-thumb { width: 160px; height: 90px; border-radius: 8px; object-fit: cover; background:#1c254b;}
+        .pill { display:inline-block; padding:4px 8px; border-radius: 999px; background:#1b2447; color:var(--muted); font-size:12px; }
+        footer { opacity:.7; font-size: 12px; text-align:center; padding: 24px; }
+        .error { color:#ff8f8f; background:#3a1316; border:1px solid #6b1f23; padding:10px 12px; border-radius: 12px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand"><a href="/">Spotify → YouTube Finder</a></div>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        Сделано на Django. Поиск по Spotify API → метаданные → поиск по YouTube API.
+    </footer>
+</body>
+</html>
