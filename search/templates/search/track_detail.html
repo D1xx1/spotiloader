@@ -25,13 +25,25 @@
         {% if yt_results %}
             <div class="grid cols-2">
                 {% for v in yt_results %}
-                    <div>
+                    <div class="yt-card">
                         <a href="{{ v.url }}" target="_blank" rel="noopener">
                             <img class="yt-thumb" src="{{ v.thumbnail }}" alt="">
                         </a>
-                        <div style="margin-top:6px;"><a href="{{ v.url }}" target="_blank" rel="noopener">{{ v.title }}</a></div>
+
+                        <div style="margin-top:6px;">
+                            <a href="{{ v.url }}" target="_blank" rel="noopener">{{ v.title }}</a>
+                        </div>
                         <div class="muted">{{ v.channel }}</div>
                         <div class="muted" style="font-size:12px;">{{ v.published_at|slice:":10" }}</div>
+
+                        <!-- КНОПКА СКАЧИВАНИЯ АУДИО -->
+                        <div style="margin-top:6px;">
+                            <a class="pill"
+                            href="{% url 'youtube_audio' v.video_id %}"
+                            title="Скачать аудиодорожку">
+                                Скачать аудио
+                            </a>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
