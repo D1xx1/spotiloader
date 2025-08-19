@@ -10,7 +10,37 @@
     {% if error %}
         <div class="error" style="margin-top:12px;">Ошибка запроса: {{ error }}</div>
     {% endif %}
-    {% if query %}
+    
+    {% if not query %}
+    <!-- Описание проекта - показывается только до поиска -->
+    <div class="project-description" style="margin-top:20px; text-align:center; padding:20px;">
+        <div style="font-size:48px; margin-bottom:16px;">🎵</div>
+        <h2 style="margin:0 0 12px 0; color:var(--ink); font-size:24px;">MusicFinder</h2>
+        <p style="margin:0 0 16px 0; color:var(--muted); font-size:16px; line-height:1.5;">
+            Приложение для поиска и скачивания музыки<br>
+            в формате MP3
+        </p>
+        <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-top:20px;">
+            <div style="text-align:center;">
+                <div style="font-size:24px; margin-bottom:8px;">🔍</div>
+                <div style="font-size:14px; color:var(--muted);">Умный поиск</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:24px; margin-bottom:8px;">🎧</div>
+                <div style="font-size:14px; color:var(--muted);">Превью треков</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:24px; margin-bottom:8px;">📥</div>
+                <div style="font-size:14px; color:var(--muted);">Скачивание MP3</div>
+            </div>
+        </div>
+        <div style="margin-top:24px; padding:12px 20px; background:linear-gradient(135deg, #1a2f4a 0%, #0f1f3a 100%); border-radius:12px; border:1px solid #2a3355;">
+            <p style="margin:0; color:var(--muted); font-size:14px;">
+                💡 <strong>Совет:</strong> Вставьте ссылку Spotify или введите название трека
+            </p>
+        </div>
+    </div>
+    {% else %}
         <p class="muted" style="margin-top:12px;">Результаты поиска для: <strong>{{ query }}</strong></p>
     {% endif %}
 </div>
