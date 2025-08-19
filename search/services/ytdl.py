@@ -67,7 +67,7 @@ def get_direct_audio(video_id: str) -> Tuple[str, str, str]:
         return stream_url, filename, mime
 
 
-def download_mp3(video_id: str) -> Tuple[bytes, str]:
+def download_mp3(video_id: str, progress_callback=None) -> Tuple[bytes, str]:
     """
     Download audio from YouTube and convert it to MP3 using yt-dlp.
     Returns (data_bytes, filename).
@@ -88,6 +88,11 @@ def download_mp3(video_id: str) -> Tuple[bytes, str]:
                 }
             ],
         }
+        
+        # Добавляем callback для отслеживания прогресса
+        if progress_callback:
+            ydl_opts["progress_hooks"] = [progress_callback]
+        
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             temp_path = ydl.prepare_filename(info)

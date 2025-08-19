@@ -5,7 +5,7 @@ class SearchForm(forms.Form):
         label="Поиск трека в Spotify (название или ссылка)",
         max_length=300,
         widget=forms.TextInput(attrs={
-            "placeholder": "Например: Linkin Park - Numb ИЛИ https://open.spotify.com/track/…",
+            "placeholder": "Название или ссылку на трек в Spotify",
             "class": "input"
         }),
     )

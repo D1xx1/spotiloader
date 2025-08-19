@@ -1,5 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
+<!-- Основное поле поиска -->
+<div class="card" style="margin-bottom:14px;">
+    <form method="get" action="{% url 'search' %}">
+        <div class="row" style="gap:10px;">
+            <input 
+                type="text" 
+                name="q" 
+                placeholder="Например: Linkin Park - Numb ИЛИ https://open.spotify.com/track/…"
+                class="input"
+                style="flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--ink); font-size:14px;"
+            >
+            <button class="btn" type="submit" style="padding:8px 16px; background:var(--accent); color:white; border:none; border-radius:6px; cursor:pointer; font-size:14px;">Искать</button>
+        </div>
+    </form>
+</div>
+
 <div class="grid cols-2">
     <div class="card">
         <div class="row">
@@ -15,7 +31,34 @@
         <div style="margin-top:12px;">
             <a class="pill" href="{{ meta.external_url }}" target="_blank" rel="noopener">Открыть в Spotify</a>
             {% if meta.preview_url %}
-                <audio style="display:block;margin-top:10px;width:100%" controls src="{{ meta.preview_url }}"></audio>
+                <div class="preview-player">
+                    <div class="preview-header">
+                        <span class="preview-icon">🎵</span>
+                        <span class="preview-title">Превью трека (30 сек)</span>
+                    </div>
+                    <audio 
+                        id="preview-audio"
+                        class="preview-audio" 
+                        controls 
+                        preload="metadata"
+                        src="{{ meta.preview_url }}"
+                        style="width:100%; margin-top:8px; border-radius:8px;"
+                    ></audio>
+                    <div class="preview-info">
+                        <small class="muted">Превью предоставлено Spotify</small>
+                        <div class="preview-status" id="preview-status"></div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="preview-unavailable">
+                    <div class="preview-header">
+                        <span class="preview-icon">🔇</span>
+                        <span class="preview-title">Превью недоступно</span>
+                    </div>
+                    <div class="preview-info">
+                        <small class="muted">Для этого трека нет доступного превью</small>
+                    </div>
+                </div>
             {% endif %}
         </div>
     </div>
@@ -38,10 +81,16 @@
 
                         <!-- КНОПКА СКАЧИВАНИЯ АУДИО -->
                         <div style="margin-top:6px;">
-                            <a class="pill"
+                            <a class="pill download-btn"
                             href="{% url 'youtube_audio' v.video_id %}"
-                            title="Скачать аудиодорожку">
-                                Скачать аудио
+                            download="{{ v.title|slice:':50' }}.mp3"
+                            title="Скачать аудиодорожку"
+                            data-video-id="{{ v.video_id }}">
+                                <span class="download-text">Скачать аудио</span>
+                                <div class="download-progress" style="display: none;">
+                                    <div class="progress-fill"></div>
+                                    <span class="progress-text">0%</span>
+                                </div>
                             </a>
                         </div>
                     </div>
@@ -52,4 +101,267 @@
         {% endif %}
     </div>
 </div>
+
+<style>
+.preview-player {
+    background: linear-gradient(135deg, #1a1f3a 0%, #2a2f4a 100%);
+    border: 1px solid #3a3f5a;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.preview-unavailable {
+    background: linear-gradient(135deg, #2a1f1f 0%, #3a2f2f 100%);
+    border: 1px solid #4a3f3f;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 12px;
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.preview-icon {
+    font-size: 16px;
+}
+
+.preview-title {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.preview-info {
+    margin-top: 8px;
+    text-align: center;
+}
+
+.preview-status {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--accent);
+}
+
+.preview-audio {
+    background: #0e1530;
+    border: 1px solid #2a3355;
+}
+
+.preview-audio::-webkit-media-controls-panel {
+    background: #0e1530;
+}
+
+.preview-audio::-webkit-media-controls-play-button {
+    background: var(--accent);
+    border-radius: 50%;
+}
+
+.preview-audio::-webkit-media-controls-current-time-display,
+.preview-audio::-webkit-media-controls-time-remaining-display {
+    color: var(--ink);
+}
+
+/* Стили для прогресс-бара скачивания */
+.download-btn {
+    position: relative;
+    min-width: 120px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.download-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.download-btn.downloading {
+    background: linear-gradient(135deg, #1a2f4a 0%, #0f1f3a 100%);
+    pointer-events: none;
+}
+
+.download-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    z-index: 1;
+}
+
+.progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #1DB954, #1ed760);
+    transition: width 0.1s ease-out;
+    width: 0%;
+    z-index: -1;
+}
+
+.progress-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    z-index: 2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.download-text {
+    transition: opacity 0.3s ease;
+    position: relative;
+    z-index: 2;
+}
+
+.downloading .download-text {
+    opacity: 0;
+}
+
+.downloading .download-progress {
+    display: flex !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const audio = document.getElementById('preview-audio');
+    const status = document.getElementById('preview-status');
+    
+    if (audio && status) {
+        // Обновление статуса при загрузке
+        audio.addEventListener('loadstart', function() {
+            status.textContent = 'Загрузка превью...';
+        });
+        
+        // Обновление статуса при готовности к воспроизведению
+        audio.addEventListener('canplay', function() {
+            status.textContent = 'Готово к воспроизведению';
+        });
+        
+        // Обновление статуса при воспроизведении
+        audio.addEventListener('play', function() {
+            status.textContent = 'Воспроизведение...';
+        });
+        
+        // Обновление статуса при паузе
+        audio.addEventListener('pause', function() {
+            status.textContent = 'На паузе';
+        });
+        
+        // Обновление статуса при окончании
+        audio.addEventListener('ended', function() {
+            status.textContent = 'Превью завершено';
+        });
+        
+        // Обновление статуса при ошибке
+        audio.addEventListener('error', function() {
+            status.textContent = 'Ошибка загрузки превью';
+        });
+        
+        // Автоматическая остановка через 30 секунд (на всякий случай)
+        audio.addEventListener('timeupdate', function() {
+            if (audio.currentTime >= 30) {
+                audio.pause();
+                audio.currentTime = 0;
+                status.textContent = 'Превью завершено (30 сек)';
+            }
+        });
+    }
+    
+    // Принудительное скачивание для кнопок "Скачать аудио"
+    const downloadButtons = document.querySelectorAll('a[href*="/youtube/"][href*="/audio/"]');
+    downloadButtons.forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = button.href;
+            const filename = button.getAttribute('download') || 'audio.mp3';
+            const videoId = button.getAttribute('data-video-id');
+            
+            // Показываем прогресс-бар
+            button.classList.add('downloading');
+            const progressFill = button.querySelector('.progress-fill');
+            const progressText = button.querySelector('.progress-text');
+            
+            // Подключаемся к SSE для получения реального прогресса
+            const eventSource = new EventSource(`/youtube/${videoId}/progress/`);
+            
+            eventSource.onmessage = function(event) {
+                const progress = JSON.parse(event.data);
+                
+                // Обновляем прогресс-бар
+                progressFill.style.width = progress.progress + '%';
+                progressText.textContent = progress.progress + '%';
+                
+                // Обрабатываем завершение
+                if (progress.status === 'completed') {
+                    // Скачиваем файл
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    // Восстанавливаем кнопку через 1 секунду
+                    setTimeout(() => {
+                        button.classList.remove('downloading');
+                        progressFill.style.width = '0%';
+                        progressText.textContent = '0%';
+                        eventSource.close();
+                    }, 1000);
+                } else if (progress.status === 'error') {
+                    // Обрабатываем ошибку
+                    console.error('Ошибка скачивания:', progress.message);
+                    button.classList.remove('downloading');
+                    progressFill.style.width = '0%';
+                    progressText.textContent = '0%';
+                    eventSource.close();
+                    alert('Ошибка при скачивании файла: ' + progress.message);
+                }
+                // Для статусов 'starting', 'downloading', 'processing' - просто обновляем прогресс
+            };
+            
+            eventSource.onerror = function() {
+                console.error('Ошибка SSE соединения');
+                // Проверяем, не завершился ли процесс нормально
+                if (progressText.textContent === '100%') {
+                    // Процесс завершился нормально, просто закрываем соединение
+                    eventSource.close();
+                    return;
+                }
+                
+                button.classList.remove('downloading');
+                progressFill.style.width = '0%';
+                progressText.textContent = '0%';
+                eventSource.close();
+                alert('Ошибка соединения с сервером');
+            };
+            
+            // Запускаем скачивание в фоне
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка скачивания:', error);
+                    button.classList.remove('downloading');
+                    progressFill.style.width = '0%';
+                    progressText.textContent = '0%';
+                    eventSource.close();
+                    alert('Ошибка при скачивании файла');
+                });
+        });
+    });
+});
+</script>
 {% endblock %}
