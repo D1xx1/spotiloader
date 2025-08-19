@@ -1,7 +1,7 @@
 from typing import Dict, Any, List
 import requests
 import re
-from djspyt import keys
+from .youtube_key_manager import key_manager
 
 def clean_query(query: str) -> str:
     """Очищает запрос от специальных символов и лишних пробелов"""
@@ -45,34 +45,86 @@ def search_youtube(query: str, limit: int = 6) -> List[Dict[str, Any]]:
     return []
 
 def _search_youtube_single(query: str, limit: int) -> List[Dict[str, Any]]:
-    """Выполняет один поисковый запрос к YouTube API"""
-    params = {
-        "part": "snippet",
-        "q": query,
-        "maxResults": limit,
-        "type": "video",
-        "key": keys.YOUTUBE_API_KEY,
-        "safeSearch": "none",
-        "relevanceLanguage": "en",  # Добавляем предпочтение английскому языку
-    }
+    """Выполняет один поисковый запрос к YouTube API с автоматической ротацией ключей"""
     
-    try:
-        resp = requests.get("https://www.googleapis.com/youtube/v3/search", params=params, timeout=15)
-        resp.raise_for_status()
-        data = resp.json()
-        results = []
-        for item in data.get("items", []):
-            vid = item["id"]["videoId"]
-            sn = item["snippet"]
-            results.append({
-                "video_id": vid,
-                "title": sn.get("title"),
-                "channel": sn.get("channelTitle"),
-                "published_at": sn.get("publishedAt"),
-                "thumbnail": (sn.get("thumbnails", {}).get("medium") or sn.get("thumbnails", {}).get("default") or {}).get("url"),
-                "url": f"https://www.youtube.com/watch?v={vid}",
-            })
-        return results
-    except Exception as e:
-        print(f"Ошибка поиска YouTube для запроса '{query}': {e}")
-        return []
+    # Пробуем все доступные ключи
+    for attempt in range(key_manager.get_available_keys_count() + 1):
+        current_key = key_manager.get_current_key()
+        if not current_key:
+            print("❌ Нет доступных ключей YouTube API")
+            return []
+        
+        params = {
+            "part": "snippet",
+            "q": query,
+            "maxResults": limit,
+            "type": "video",
+            "key": current_key,
+            "safeSearch": "none",
+            "relevanceLanguage": "en",
+        }
+
+        try:
+            resp = requests.get("https://www.googleapis.com/youtube/v3/search", params=params, timeout=15)
+            
+            # Проверяем статус ответа
+            if resp.status_code == 200:
+                data = resp.json()
+                
+                # Проверяем наличие ошибок в ответе
+                if "error" in data:
+                    error = data["error"]
+                    error_code = error.get('code')
+                    error_message = error.get('message', '')
+                    
+                    # Если ошибка связана с ключом API, помечаем его как неработающий
+                    if error_code in [403, 400] or "quota" in error_message.lower() or "key" in error_message.lower():
+                        key_manager.mark_key_failed(current_key, f"Код {error_code}: {error_message}")
+                        continue  # Пробуем следующий ключ
+                    else:
+                        print(f"❌ YouTube API вернул ошибку для запроса '{query}':")
+                        print(f"   Код: {error_code}")
+                        print(f"   Сообщение: {error_message}")
+                        return []
+                
+                # Успешный ответ
+                results = []
+                for item in data.get("items", []):
+                    vid = item["id"]["videoId"]
+                    sn = item["snippet"]
+                    results.append({
+                        "video_id": vid,
+                        "title": sn.get("title"),
+                        "channel": sn.get("channelTitle"),
+                        "published_at": sn.get("publishedAt"),
+                        "thumbnail": (sn.get("thumbnails", {}).get("medium") or sn.get("thumbnails", {}).get("default") or {}).get("url"),
+                        "url": f"https://www.youtube.com/watch?v={vid}",
+                    })
+                return results
+                
+            elif resp.status_code == 403:
+                # Ключ заблокирован или превышена квота
+                error_text = resp.text[:200]
+                key_manager.mark_key_failed(current_key, f"403 Forbidden: {error_text}")
+                continue  # Пробуем следующий ключ
+                
+            elif resp.status_code == 400:
+                # Неверный запрос
+                error_text = resp.text[:200]
+                key_manager.mark_key_failed(current_key, f"400 Bad Request: {error_text}")
+                continue  # Пробуем следующий ключ
+                
+            else:
+                print(f"❌ Неожиданный статус YouTube API для запроса '{query}': {resp.status_code}")
+                return []
+                
+        except requests.exceptions.RequestException as e:
+            print(f"❌ Ошибка сети при поиске YouTube для запроса '{query}': {e}")
+            return []
+        except Exception as e:
+            print(f"❌ Неожиданная ошибка при поиске YouTube для запроса '{query}': {e}")
+            return []
+    
+    # Если все ключи исчерпаны
+    print(f"❌ Все ключи YouTube API исчерпаны для запроса '{query}'")
+    raise Exception("Упс, похоже закончились ключи. Сообщите об ошибке в Telegram: @Vie333")

@@ -8,6 +8,7 @@ from .forms import SearchForm
 from .services.spotify import search_tracks, get_track_metadata
 from .services.youtube import search_youtube
 from .services.ytdl import download_mp3
+from .services.youtube_key_manager import key_manager
 
 # Глобальный словарь для хранения прогресса
 download_progress = {}
@@ -78,11 +79,21 @@ def track_detail(request: HttpRequest, track_id: str) -> HttpResponse:
     meta["duration_str"] = ms_to_mmss(meta.get("duration_ms"))
     yt_query = f"{meta['artists']} - {meta['name']}"
     yt_results = []
+    yt_error = None
     try:
         yt_results = search_youtube(yt_query, limit=6)
-    except Exception:
+    except Exception as e:
+        yt_error = str(e)
         yt_results = []
-    context = {"meta": meta, "yt_query": yt_query, "yt_results": yt_results}
+        # Если это сообщение о закончившихся ключах, не показываем другие ошибки
+        if "закончились ключи" in str(e):
+            yt_error = str(e)
+    context = {
+        "meta": meta, 
+        "yt_query": yt_query, 
+        "yt_results": yt_results, 
+        "yt_error": yt_error
+    }
     return render(request, "search/track_detail.html", context)
 
 def youtube_audio(request: HttpRequest, video_id: str) -> HttpResponse:

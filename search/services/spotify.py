@@ -5,6 +5,7 @@ import requests
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 from djspyt import keys
+from .deezer import get_enhanced_preview
 
 # Инициализация Spotify клиента
 client_credentials_manager = SpotifyClientCredentials(
@@ -37,7 +38,7 @@ def search_tracks(query: str, limit: int = 10) -> List[Dict[str, Any]]:
         return []
 
 def get_track_metadata(track_id: str) -> Dict[str, Any]:
-    """Получение метаданных трека через spotipy"""
+    """Получение метаданных трека через spotipy с улучшенным превью"""
     try:
         track = sp.track(track_id, market='US')
         
@@ -56,6 +57,22 @@ def get_track_metadata(track_id: str) -> Dict[str, Any]:
             "preview_url": track.get("preview_url"),
             "external_url": track.get("external_urls", {}).get("spotify"),
         }
+        
+        # Если Spotify не предоставляет превью, пробуем Deezer
+        if not meta["preview_url"]:
+            print(f"🔍 Ищем превью для {meta['name']}...")
+            deezer_track = get_enhanced_preview(meta["artists"], meta["name"])
+            
+            if deezer_track and deezer_track.get("preview_url"):
+                meta["preview_url"] = deezer_track["preview_url"]
+                meta["preview_source"] = "Deezer"
+                print(f"✅ Найдено превью: {deezer_track['title']} - {deezer_track['artist']}")
+            else:
+                print(f"❌ Превью не найдено")
+                meta["preview_source"] = "None"
+        else:
+            meta["preview_source"] = "Spotify"
+        
         return meta
     except Exception as e:
         print(f"Ошибка получения метаданных трека: {e}")
